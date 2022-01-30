@@ -121,3 +121,15 @@ variable "cloudwatch_kms_arn" {
   type        = string
   default     = ""
 }
+
+variable "slack_notification_webhook_url" {
+  description = "The slack webhook URL to send scan notifications too."
+  type        = string
+  default     = ""
+}
+
+variable "slack_notification_on_clean" {
+  description = "Send slack notifications when scan results are clean."
+  type        = string
+  default     = "False"
+}
