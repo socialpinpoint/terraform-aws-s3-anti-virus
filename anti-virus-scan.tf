@@ -125,8 +125,10 @@ resource "aws_iam_role_policy" "main_scan" {
 #
 
 data "aws_s3_bucket" "main_scan" {
-  count  = length(var.av_scan_buckets)
-  bucket = var.av_scan_buckets[count.index]
+  for_each = var.av_scan_buckets
+
+  bucket = each.key
+  provider = "aws.${each.value}"
 }
 
 resource "aws_s3_bucket_notification" "main_scan" {

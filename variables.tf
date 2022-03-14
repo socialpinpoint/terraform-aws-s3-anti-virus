@@ -51,7 +51,14 @@ variable "av_update_minutes" {
 
 variable "av_scan_buckets" {
   description = "A list of S3 bucket names to scan for viruses."
-  type        = list(string)
+  type        = map(string)
+
+  validation {
+    condition = alltrue([
+      for region in values(var.av_scan_buckets) : contains(["ca-central-1", "eu-west-1", "ap-southeast-2", "us-west-2"], region)
+    ])
+    error_message = "Must contain allowed regions."
+  }
 }
 
 variable "permissions_boundary" {
