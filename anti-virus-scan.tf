@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "main_scan" {
       "s3:PutObjectVersionTagging",
     ]
 
-    resources = formatlist("%s/*", data.aws_s3_bucket.main_scan.*.arn)
+    resources = formatlist("arn:aws:s3:::%s/*", var.av_scan_buckets)
   }
 
   statement {
@@ -88,7 +88,7 @@ data "aws_iam_policy_document" "main_scan" {
       "kms:Decrypt",
     ]
 
-    resources = formatlist("%s/*", data.aws_s3_bucket.main_scan.*.arn)
+    resources = formatlist("arn:aws:s3:::%s/*", var.av_scan_buckets)
   }
 
   dynamic "statement" {
@@ -124,19 +124,12 @@ resource "aws_iam_role_policy" "main_scan" {
 # S3 Event
 #
 
-data "aws_s3_bucket" "main_scan" {
-  for_each = var.av_scan_buckets
-
-  bucket = each.key
-  provider = "aws.${each.value}"
-}
-
 resource "aws_s3_bucket_notification" "main_scan" {
-  count  = length(var.av_scan_buckets)
-  bucket = element(data.aws_s3_bucket.main_scan.*.id, count.index)
+  for_each = toset(var.av_scan_buckets)
+  bucket   = each.key
 
   lambda_function {
-    id                  = element(data.aws_s3_bucket.main_scan.*.id, count.index)
+    id                  = each.key
     lambda_function_arn = aws_lambda_function.main_scan.arn
     events              = ["s3:ObjectCreated:*"]
   }
@@ -202,7 +195,7 @@ resource "aws_lambda_function" "main_scan" {
 }
 
 resource "aws_lambda_permission" "main_scan" {
-  count = length(var.av_scan_buckets)
+  for_each = toset(var.av_scan_buckets)
 
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.main_scan.function_name
@@ -210,7 +203,7 @@ resource "aws_lambda_permission" "main_scan" {
   principal = "s3.amazonaws.com"
 
   source_account = data.aws_caller_identity.current.account_id
-  source_arn     = element(data.aws_s3_bucket.main_scan.*.arn, count.index)
+  source_arn     = "arn:${data.aws_partition.current.partition}:s3:::${each.key}"
 
-  statement_id = replace("${var.name_scan}-${element(data.aws_s3_bucket.main_scan.*.id, count.index)}", ".", "-")
+  statement_id = replace("${var.name_scan}-${each.key}", ".", "-") # Name
 }
