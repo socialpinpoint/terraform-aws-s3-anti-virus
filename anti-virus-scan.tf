@@ -107,14 +107,14 @@ data "aws_iam_policy_document" "main_scan" {
 }
 
 resource "aws_iam_role" "main_scan" {
-  name                 = "lambda-${var.name_scan}"
+  name                 = "lambda-${var.name_scan}-${var.instance}"
   assume_role_policy   = data.aws_iam_policy_document.assume_role_scan.json
   permissions_boundary = var.permissions_boundary
   tags                 = var.tags
 }
 
 resource "aws_iam_role_policy" "main_scan" {
-  name = "lambda-${var.name_scan}"
+  name = "lambda-${var.name_scan}-${var.instance}"
   role = aws_iam_role.main_scan.id
 
   policy = data.aws_iam_policy_document.main_scan.json
