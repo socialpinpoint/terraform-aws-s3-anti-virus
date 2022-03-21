@@ -1,3 +1,7 @@
+variable "instance" {
+  type = string
+}
+
 variable "name_scan" {
   default     = "s3-anti-virus-scan"
   description = "Name for resources associated with anti-virus scanning"
